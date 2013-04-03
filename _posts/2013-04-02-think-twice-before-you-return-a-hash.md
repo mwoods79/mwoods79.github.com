@@ -7,7 +7,7 @@ tags: [ruby, hashrocket]
 ---
 {% include JB/setup %}
 
-Recently I got the change to do an hour programming audition for the awesome
+Recently I got the chance to do an hour programming audition for the awesome
 people at [hashrocket](http://www.hashrocket.com). I was excited, I brushed up on
 the basics the night before, readied myself with some herbal tea and logged in
 to the audition with enthusiasm.
