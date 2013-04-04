@@ -180,12 +180,12 @@ Now lets look at what our original parse method *could* look like.
       parse_domains_from_host domain
     end
 
-    def parse_domain domain
+    def parse_domain domain_to_parse
       #... imagine code here to calculate domain
-      domain.domain = domain
-      domain.subdomain = subdomain
-      domain.public_suffix = public_suffix
-      domain
+      domain_to_parse.domain = domain
+      domain_to_parse.subdomain = subdomain
+      domain_to_parse.public_suffix = public_suffix
+      domain_to_parse
     end
 
 Amazing how that would clean up.  The moral of the story is, if you see a method,
