@@ -177,7 +177,7 @@ Now lets look at what our original parse method *could* look like.
       domain = ParsedDomain.new url
 
       return domain if domain.localhost?
-      parse_domains_from_host domain
+      parse_domain domain
     end
 
     def parse_domain domain_to_parse
