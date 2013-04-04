@@ -23,7 +23,7 @@ some kind of strategy out.
 
 After about 20 minutes I had only refactored a couple of methods.  I was on the
 spot and couldn't figure out what was wrong.  I kept gravitating towards the
-the big method but didn't know how to break it apart.
+the big methods but didn't know how to break it apart.
 
 Here is the code.
 
@@ -114,35 +114,85 @@ Here is the code.
       end
     end
 
-So much is wrong with this I don't even know where to start, but the next morning
-I woke up with a clear head.  The author was returning a hash from both methods
-that deal with parsing the domain.
+So a lot is wrong with this code.  The most fundamentally flawed logic in this
+code is not the fact that it has large methods, or a file parsing that obviously
+does not belong but the conscious decision to return hash's from the methods.
 
-If I had to do it over again I would immediately create a `struct` and start
-testing and abstracting logic.  In case your not familiar a struct works like a
-hash in ruby.
+When a hash is return from a method it is essentially an anonymous object.  It
+has methods, and state, but no constructor and no class definition.  Think about
+how much of this code would just vanish if an object was returned.
 
-    Foo = Struct.new :bar, :baz
-    foo = Foo.new "hello", "world"
-    foo[:bar]  #=> "hello"
-    foo["bar"] #=> "hello"
-    foo.bar    #=> "hello"
-    foo.baz    #=> "world"
+Since this file actually had other files that depended on this class returning
+a hash, we will have to imagine some code.
 
-It can also take a block.
+    class ParsedDomain
+      attr_writer :public_suffix, :subdomain
+      attr_accessor :domain
 
-    Foo = Struct.new :first, :last do
-      def full_name
-        "#{first} #{last}"
+      def initilize uri
+        @uri = URI.parse uri
+      end
+
+      def public_suffix
+        @public_suffix || ""
+      end
+
+      def subdomain
+        @public_suffix || ""
+      end
+
+      def scheme
+        @uri.scheme
+      end
+
+      def host
+        @uri.host
+      end
+
+      def path
+        return"#{@uri.path}?#{@uri.query}" if @uri.query
+        @uri.path
+      end
+
+      def url
+        @uri.url
+      end
+
+      def localhost?
+        @uri.host == 'localhost'
       end
     end
 
-    foo = Foo.new "Micah", "Woods"
-    foo.full_name #=> "Micah Woods"
+(I could have done some cool meta programming here so that I didn't have to repeat
+logic over and over again, but I wanted to be more explicit because this is an
+example.)
 
-How does this help us?  Because a `struct` works just like a hash, we can convert
-the return to the `struct` with minimal modifications to the existing system. Run
-our tests, and start to extract logic.  This blog is getting a lot longer than I
-intended so I will post an example of refactoring some of this logic soon.
+Now lets look at what our original parse method *could* look like.
 
-Until then, remember, NEVER RETURN A HASH (at least not without real good reason)
+
+    def parse(url)
+      return {} unless url && url.strip != ''
+      url = "http://#{url}" unless url[/:\/\//]
+
+      domain = ParsedDomain.new url
+
+      return domain if domain.localhost?
+      parse_domains_from_host domain
+    end
+
+    def parse_domain domain
+      #... imagine code here to calculate domain
+      domain.domain = domain
+      domain.subdomain = subdomain
+      domain.public_suffix = public_suffix
+      domain
+    end
+
+Amazing how that would clean up.  The moral of the story is, if you see a method,
+or write a method that returns a hash, you probably really wanted to return an
+object (with a class you defined).  Take two steps back and re-evaluate what you
+are doing.
+
+I really enjoyed getting out of my comfort zone and trying to fix some nasty ruby
+for a change.  I forget that code like this exists sometimes, and it is nice to
+think about what makes code good for a change.
